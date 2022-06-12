@@ -144,13 +144,7 @@ public class WorkGiver_HaulToInventory : WorkGiver_HaulGeneral
 		{
 			[storeTarget] = new(nextThing, capacityStoreCell)
 		};
-		//skipTargets = new() { storeTarget };
-		skipCells = new();
-		skipThings = new();
-		if (storeTarget.container != null)
-			skipThings.Add(storeTarget.container);
-		else
-			skipCells.Add(storeTarget.cell);
+		skipCells = new() { storeTarget };
 
 		bool Validator(Thing t)
 			=> (!isUrgent || designationManager.DesignationOn(t)?.def == haulUrgentlyDesignation)
@@ -180,8 +174,6 @@ public class WorkGiver_HaulToInventory : WorkGiver_HaulGeneral
 		if (nextThing == null)
 		{
 			skipCells = null;
-			skipThings = null;
-			//skipTargets = null;
 			return job;
 		}
 
@@ -194,8 +186,6 @@ public class WorkGiver_HaulToInventory : WorkGiver_HaulGeneral
 		{
 			Log.Message("Can't carry more, nevermind!");
 			skipCells = null;
-			skipThings = null;
-			//skipTargets = null;
 			return job;
 		}
 		Log.Message($"Looking for more like {nextThing}");
@@ -218,8 +208,6 @@ public class WorkGiver_HaulToInventory : WorkGiver_HaulGeneral
 		}
 
 		skipCells = null;
-		skipThings = null;
-		//skipTargets = null;
 		return job;
 	}
 
@@ -451,9 +439,7 @@ public class WorkGiver_HaulToInventory : WorkGiver_HaulGeneral
 		return true;
 	}
 
-	//public static HashSet<StoreTarget> skipTargets;
-	public static HashSet<IntVec3> skipCells;
-	public static HashSet<Thing> skipThings;
+	public static HashSet<StoreTarget> skipCells;
 
 	public static bool TryFindBestBetterStorageFor(Thing t, Pawn carrier, Map map, StoragePriority currentPriority, Faction faction, out IntVec3 foundCell, out IHaulDestination haulDestination, out ThingOwner innerInteractableThingOwner)
 	{
@@ -506,13 +492,13 @@ public class WorkGiver_HaulToInventory : WorkGiver_HaulGeneral
 			for (var j = 0; j < cellsList.Count; j++)
 			{
 				var cell = cellsList[j];
-				if (skipCells.Contains(cell))
+				if (skipCells.Contains(new(cell)))
 					continue;
 				if (StoreUtility.IsGoodStoreCell(cell, map, thing, carrier, faction) && cell != default)
 				{
 					foundCell = cell;
 
-					skipCells.Add(cell);
+					skipCells.Add(new(cell));
 
 					return true;
 				}
@@ -552,7 +538,7 @@ public class WorkGiver_HaulToInventory : WorkGiver_HaulGeneral
 
 			if (iHaulDestination is Thing thing)
 			{
-				if (skipThings.Contains(thing) || thing.Faction != faction)
+				if (skipCells.Contains(new(thing)) || thing.Faction != faction)
 					continue;
 
 				if (carrier != null)
@@ -570,7 +556,7 @@ public class WorkGiver_HaulToInventory : WorkGiver_HaulGeneral
 						continue;
 				}
 
-				skipThings.Add(thing);
+				skipCells.Add(new(thing));
 			}
 			else
 			{
